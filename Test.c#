@@ -1,0 +1,73 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+class Student
+{
+    public string Name { get; set; }
+    public DateTime BirthDate { get; set; }
+    public DateTime AdmissionDate { get; set; }
+    public string Group { get; set; }
+    public List<int> Grades { get; set; }
+    public double AverageGrade => Grades.Average();
+
+    public override string ToString()
+    {
+        return $"{Name} | Рождение: {BirthDate.ToShortDateString()} | Поступление: {AdmissionDate.ToShortDateString()} | Группа: {Group} | Оценки: [{string.Join(", ", Grades)}] | Средний балл: {AverageGrade:F2}";
+    }
+}
+
+class Program
+{
+    static Random random = new Random();
+    static string[] firstNames = { "Иван", "Алексей", "Мария", "Екатерина", "Петр", "Анна", "Николай", "Ольга" };
+    static string[] lastNames = { "Иванов", "Смирнов", "Кузнецов", "Попов", "Васильев", "Петрова", "Соколова" };
+    static string[] groups = { "ИКБО-01-23", "ИКБО-02-23", "ИКБО-03-23" };
+
+    static string GenerateName()
+    {
+        return $"{firstNames[random.Next(firstNames.Length)]} {lastNames[random.Next(lastNames.Length)]}";
+    }
+
+    static DateTime GenerateBirthDate()
+    {
+        return new DateTime(random.Next(1999, 2006), random.Next(1, 13), random.Next(1, 28));
+    }
+
+    static DateTime GenerateAdmissionDate()
+    {
+        return new DateTime(random.Next(2020, 2023), random.Next(1, 13), random.Next(1, 28));
+    }
+
+    static List<int> GenerateGrades()
+    {
+        return Enumerable.Range(0, 5).Select(_ => random.Next(3, 6)).ToList(); // оценки от 3 до 5
+    }
+
+    static void Main()
+    {
+        List<Student> students = new List<Student>();
+
+        // Генерация 10 студентов
+        for (int i = 0; i < 10; i++)
+        {
+            students.Add(new Student
+            {
+                Name = GenerateName(),
+                BirthDate = GenerateBirthDate(),
+                AdmissionDate = GenerateAdmissionDate(),
+                Group = groups[random.Next(groups.Length)],
+                Grades = GenerateGrades()
+            });
+        }
+
+        Console.WriteLine("Список студентов до сортировки:");
+        foreach (var student in students)
+            Console.WriteLine(student);
+
+        Console.WriteLine("\nСписок студентов после сортировки по среднему баллу (по убыванию):");
+        var sortedStudents = students.OrderByDescending(s => s.AverageGrade).ToList();
+        foreach (var student in sortedStudents)
+            Console.WriteLine(student);
+    }
+}
