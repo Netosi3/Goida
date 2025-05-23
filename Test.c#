@@ -20,13 +20,25 @@ class Student
 class Program
 {
     static Random random = new Random();
-    static string[] firstNames = { "Иван", "Алексей", "Мария", "Екатерина", "Петр", "Анна", "Николай", "Ольга" };
-    static string[] lastNames = { "Иванов", "Смирнов", "Кузнецов", "Попов", "Васильев", "Петрова", "Соколова" };
+
+    static string[] maleFirstNames = { "Иван", "Алексей", "Петр", "Николай", "Сергей" };
+    static string[] femaleFirstNames = { "Анна", "Ольга", "Мария", "Екатерина", "Наталья" };
+
+    static string[] maleLastNames = { "Иванов", "Смирнов", "Кузнецов", "Попов", "Васильев" };
+    static string[] femaleLastNames = { "Иванова", "Смирнова", "Кузнецова", "Попова", "Васильева" };
+
     static string[] groups = { "ИКБО-01-23", "ИКБО-02-23", "ИКБО-03-23" };
 
     static string GenerateName()
     {
-        return $"{firstNames[random.Next(firstNames.Length)]} {lastNames[random.Next(lastNames.Length)]}";
+        bool isMale = random.Next(2) == 0;
+        string firstName = isMale
+            ? maleFirstNames[random.Next(maleFirstNames.Length)]
+            : femaleFirstNames[random.Next(femaleFirstNames.Length)];
+        string lastName = isMale
+            ? maleLastNames[random.Next(maleLastNames.Length)]
+            : femaleLastNames[random.Next(femaleLastNames.Length)];
+        return $"{firstName} {lastName}";
     }
 
     static DateTime GenerateBirthDate()
