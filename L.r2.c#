@@ -1,0 +1,51 @@
+using System;
+
+class Program
+{
+    static void Main()
+    {
+        Console.WriteLine("Выберите функцию для вычисления (1-9):");
+        int choice = int.Parse(Console.ReadLine());
+        
+        Console.WriteLine("Введите значение x:");
+        double x = double.Parse(Console.ReadLine());
+        
+        double result = 0;
+        
+        switch (choice)
+        {
+            case 1:
+                result = Math.Log(1 + x) + 1/x - Math.Exp(-Math.Sin(1.3 * x - 0.7));
+                break;
+            case 2:
+                result = Math.Pow(x + 1/x, 2) + Math.Sin(Math.Exp(Math.Pow(x, 2))) + Math.Asin(Math.Cos(Math.PI * x));
+                break;
+            case 3:
+                result = 3.7 * Math.Sqrt(5) - x * Math.Cos(3.5 - x) - Math.Pow(5 - x, 1.0/3);
+                break;
+            case 4:
+                result = -Math.Exp(-Math.Pow(x, 2)/3) - 1.7 * Math.Atan(1 - 1/x) * Math.Sin(1.7 * x);
+                break;
+            case 5:
+                result = 6.3 * Math.Sin(1.3 * x - 1/x) - x + Math.Floor(x + 1/x + (x + 1/x));
+                break;
+            case 6:
+                result = Math.Cos(1.5 * x) - Math.Exp(-Math.Pow(x, 2)/3) + Math.Floor(x + 1/x);
+                break;
+            case 7:
+                result = -Math.Atan(Math.Sqrt(2 - 2 * Math.Cos(x) - Math.Exp(-5)));
+                break;
+            case 8:
+                result = Math.Sin(Math.Log(x + 2)) - Math.Cos(Math.Floor(Math.PI * Math.Log(x + 1/x))) + 1/x;
+                break;
+            case 9:
+                result = 4 * Math.Sin(15 * x + 10.21 - 9 * Math.Cos(Math.Exp(-x))) + Math.Floor(x + 1/x);
+                break;
+            default:
+                Console.WriteLine("Неверный выбор функции.");
+                return;
+        }
+        
+        Console.WriteLine($"Результат вычисления: {result:F6}");
+    }
+}
