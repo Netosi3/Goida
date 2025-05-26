@@ -1,0 +1,169 @@
+using System;
+
+class Program
+{
+    static void Main()
+    {
+        Console.WriteLine("Выберите задание (1-8):");
+        int task = int.Parse(Console.ReadLine());
+        
+        switch(task)
+        {
+            case 1:
+                Task1();
+                break;
+            case 2:
+                Task2();
+                break;
+            case 3:
+                Task3();
+                break;
+            case 4:
+                Task4();
+                break;
+            case 5:
+                Task5();
+                break;
+            case 6:
+                Task6();
+                break;
+            case 7:
+                Task7();
+                break;
+            case 8:
+                Task8();
+                break;
+            default:
+                Console.WriteLine("Неверный номер задания.");
+                break;
+        }
+    }
+
+    static void Task1()
+    {
+        Console.WriteLine("Введите число:");
+        double num = double.Parse(Console.ReadLine());
+        double result = num >= 0 ? num - 10 : num + 10;
+        Console.WriteLine($"Результат: {result}");
+    }
+
+    static void Task2()
+    {
+        Console.WriteLine("Введите первое число:");
+        double a = double.Parse(Console.ReadLine());
+        Console.WriteLine("Введите второе число:");
+        double b = double.Parse(Console.ReadLine());
+        
+        double result = (a + b) % 2 == 0 ? a * b : a / b;
+        Console.WriteLine($"Результат: {result}");
+    }
+
+    static void Task3()
+    {
+        Console.WriteLine("Введите первое число:");
+        double a = double.Parse(Console.ReadLine());
+        Console.WriteLine("Введите второе число:");
+        double b = double.Parse(Console.ReadLine());
+        
+        double result = Math.Max(a, b) - Math.Min(a, b);
+        Console.WriteLine($"Результат: {result}");
+    }
+
+    static void Task4()
+    {
+        Console.WriteLine("Введите первое число:");
+        double a = double.Parse(Console.ReadLine());
+        Console.WriteLine("Введите второе число:");
+        double b = double.Parse(Console.ReadLine());
+        
+        double sum = a + b;
+        double result = sum > 100 ? sum / 2 : sum / 2; // В обоих случаях деление на 2
+        Console.WriteLine($"Результат: {result}");
+    }
+
+    static void Task5()
+    {
+        Console.WriteLine("Введите занятое место (1-4):");
+        int place = int.Parse(Console.ReadLine());
+        
+        string reward = place switch
+        {
+            1 => "золотую медаль",
+            2 => "серебряную медаль",
+            3 => "бронзовую медаль",
+            4 => "грамоту",
+            _ => "ничего"
+        };
+        Console.WriteLine($"Спортсмен получает {reward}");
+
+        // Альтернатива для оценок ученика
+        Console.WriteLine("\nАльтернатива для оценок ученика:");
+        Console.WriteLine("Введите оценку (1-5):");
+        int grade = int.Parse(Console.ReadLine());
+        
+        string evaluation = grade switch
+        {
+            1 or 2 => "неудовлетворительно",
+            3 => "удовлетворительно",
+            4 => "хорошо",
+            5 => "отлично",
+            _ => "неверная оценка"
+        };
+        Console.WriteLine($"Ученик получил: {evaluation}");
+    }
+
+    static void Task6()
+    {
+        Console.WriteLine("Введите число:");
+        double num = double.Parse(Console.ReadLine());
+        
+        if(num < 0)
+        {
+            num = -num;
+        }
+        Console.WriteLine($"Результат: {num}");
+    }
+
+    static void Task7()
+    {
+        Console.WriteLine("Введите число A:");
+        double a = double.Parse(Console.ReadLine());
+        Console.WriteLine("Введите число B:");
+        double b = double.Parse(Console.ReadLine());
+        Console.WriteLine("Введите число C:");
+        double c = double.Parse(Console.ReadLine());
+        
+        bool areEqual = a == b && b == c;
+        Console.WriteLine($"Числа {(areEqual ? "равны" : "не равны")}");
+    }
+
+    static void Task8()
+    {
+        Console.WriteLine("Введите первую сторону:");
+        double a = double.Parse(Console.ReadLine());
+        Console.WriteLine("Введите вторую сторону:");
+        double b = double.Parse(Console.ReadLine());
+        Console.WriteLine("Введите третью сторону:");
+        double c = double.Parse(Console.ReadLine());
+        
+        if(a + b > c && a + c > b && b + c > a)
+        {
+            if(a == b && b == c)
+            {
+                Console.WriteLine("Треугольник равносторонний");
+            }
+            else if(a == b || a == c || b == c)
+            {
+                Console.WriteLine("Треугольник равнобедренный");
+            }
+            else
+            {
+                Console.WriteLine("Треугольник разносторонний");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Треугольник с такими сторонами не существует");
+        }
+    }
+}
