@@ -2,14 +2,16 @@ import pygame
 import sys
 import random
 import math
+import time
 
 # Инициализация Pygame
 pygame.init()
+pygame.mixer.init()
 
 # Настройки экрана
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 1000, 700
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Двухместная змейка - Стрелочки vs WASD")
+pygame.display.set_caption("Улучшенная двухместная змейка - Стрелочки vs WASD")
 
 # Цвета
 BLACK = (0, 0, 0)
@@ -18,31 +20,66 @@ RED = (255, 50, 50)
 BLUE = (50, 50, 255)
 GREEN = (50, 200, 50)
 PURPLE = (200, 50, 200)
+YELLOW = (255, 255, 0)
+ORANGE = (255, 165, 0)
+CYAN = (0, 255, 255)
+
+# Загрузка звуков
+try:
+    eat_sound = pygame.mixer.Sound(pygame.mixer.Sound(bytes(random.randint(0, 255) for _ in range(882))))
+    crash_sound = pygame.mixer.Sound(pygame.mixer.Sound(bytes(random.randint(0, 255) for _ in range(882))))
+    powerup_sound = pygame.mixer.Sound(pygame.mixer.Sound(bytes(random.randint(0, 255) for _ in range(882))))
+except:
+    class DummySound:
+        def play(self): pass
+    eat_sound = crash_sound = powerup_sound = DummySound()
 
 # Класс для змейки
 class Snake:
-    def __init__(self, x, y, color, control_scheme):
+    def __init__(self, x, y, color, control_scheme, name):
         self.segments = [(x, y)]
-        self.direction = (1, 0)  # начальное направление
+        self.direction = (1, 0)
         self.color = color
-        self.growth_pending = 3  # начальная длина
-        self.control_scheme = control_scheme  # 'arrows' или 'wasd'
-        self.speed = 4
+        self.growth_pending = 3
+        self.control_scheme = control_scheme
+        self.base_speed = 4
+        self.speed = self.base_speed
         self.size = 10
-        
+        self.name = name
+        self.score = 0
+        self.lives = 3
+        self.invulnerable = False
+        self.invulnerable_timer = 0
+        self.boost_active = False
+        self.boost_timer = 0
+        self.trail_particles = []
+    
     def change_direction(self, new_direction):
-        # Предотвращаем разворот на 180 градусов
         if (self.direction[0] + new_direction[0] != 0 or 
             self.direction[1] + new_direction[1] != 0):
             self.direction = new_direction
+    
+    def activate_boost(self):
+        self.boost_active = True
+        self.boost_timer = time.time() + 5  # 5 секунд ускорения
+        self.speed = self.base_speed * 1.8
     
     def move(self):
         head_x, head_y = self.segments[0]
         dx, dy = self.direction
         new_head = (head_x + dx * self.speed, head_y + dy * self.speed)
         
-        # Проверка границ экрана (телепортация на противоположную сторону)
+        # Телепортация через границы
         new_head = (new_head[0] % WIDTH, new_head[1] % HEIGHT)
+        
+        # Добавляем частицы следа
+        if random.random() > 0.7:
+            self.trail_particles.append({
+                'pos': (head_x, head_y),
+                'color': self.color,
+                'size': random.randint(3, 8),
+                'life': 20
+            })
         
         self.segments.insert(0, new_head)
         
@@ -50,10 +87,33 @@ class Snake:
             self.growth_pending -= 1
         else:
             self.segments.pop()
+        
+        # Обновляем таймеры
+        current_time = time.time()
+        if self.boost_active and current_time > self.boost_timer:
+            self.boost_active = False
+            self.speed = self.base_speed
+        
+        if self.invulnerable and current_time > self.invulnerable_timer:
+            self.invulnerable = False
+        
+        # Обновляем частицы
+        for particle in self.trail_particles[:]:
+            particle['life'] -= 1
+            if particle['life'] <= 0:
+                self.trail_particles.remove(particle)
     
     def draw(self, surface):
+        # Рисуем частицы следа
+        for particle in self.trail_particles:
+            alpha = min(255, particle['life'] * 12)
+            color = list(particle['color'])
+            if len(color) == 3:
+                color.append(alpha)
+            pygame.draw.circle(surface, color, (int(particle['pos'][0]), int(particle['pos'][1])), particle['size'] // 2)
+        
+        # Рисуем сегменты змейки
         for i, (x, y) in enumerate(self.segments):
-            # Градиент цвета от головы к хвосту
             color_factor = 1.0 - (i / len(self.segments)) * 0.7
             segment_color = (
                 min(255, int(self.color[0] * color_factor)),
@@ -61,77 +121,142 @@ class Snake:
                 min(255, int(self.color[2] * color_factor))
             )
             
+            # Мигание при неуязвимости
+            if self.invulnerable and int(time.time() * 10) % 2 == 0:
+                segment_color = WHITE
+            
             pygame.draw.circle(surface, segment_color, (int(x), int(y)), self.size)
             
             # Рисуем глаза у головы
             if i == 0:
                 eye_offset = 3
-                # Определяем позиции глаз в зависимости от направления
-                if self.direction == (1, 0):  # вправо
+                if self.direction == (1, 0):
                     left_eye = (x + self.size//2, y - eye_offset)
                     right_eye = (x + self.size//2, y + eye_offset)
-                elif self.direction == (-1, 0):  # влево
+                elif self.direction == (-1, 0):
                     left_eye = (x - self.size//2, y - eye_offset)
                     right_eye = (x - self.size//2, y + eye_offset)
-                elif self.direction == (0, -1):  # вверх
+                elif self.direction == (0, -1):
                     left_eye = (x - eye_offset, y - self.size//2)
                     right_eye = (x + eye_offset, y - self.size//2)
-                else:  # вниз
+                else:
                     left_eye = (x - eye_offset, y + self.size//2)
                     right_eye = (x + eye_offset, y + self.size//2)
                 
                 pygame.draw.circle(surface, WHITE, left_eye, 2)
                 pygame.draw.circle(surface, WHITE, right_eye, 2)
+                
+                # Эффект ускорения
+                if self.boost_active:
+                    boost_color = YELLOW
+                    boost_pos = (x - self.direction[0] * self.size * 1.5, 
+                                y - self.direction[1] * self.size * 1.5)
+                    pygame.draw.circle(surface, boost_color, (int(boost_pos[0]), int(boost_pos[1])), self.size // 2)
     
     def check_collision(self, other_snake):
+        if self.invulnerable:
+            return False
+            
         head_x, head_y = self.segments[0]
         
         # Проверка столкновения с другой змейкой
-        for segment in other_snake.segments:
-            seg_x, seg_y = segment
+        for i, (seg_x, seg_y) in enumerate(other_snake.segments):
+            # Не проверяем столкновение с головой противника при его неуязвимости
+            if i == 0 and other_snake.invulnerable:
+                continue
+                
             distance = math.sqrt((head_x - seg_x)**2 + (head_y - seg_y)**2)
             if distance < self.size + other_snake.size:
                 return True
         
         return False
     
+    def respawn(self):
+        self.segments = [(random.randint(100, WIDTH-100), random.randint(100, HEIGHT-100))]
+        self.direction = (random.choice([-1, 1]), 0)
+        self.growth_pending = 3
+        self.invulnerable = True
+        self.invulnerable_timer = time.time() + 3  # 3 секунды неуязвимости
+        self.boost_active = False
+        self.speed = self.base_speed
+    
     def grow(self, amount=1):
         self.growth_pending += amount
 
-# Создание змеек
-snake1 = Snake(WIDTH // 4, HEIGHT // 2, RED, 'arrows')
-snake2 = Snake(3 * WIDTH // 4, HEIGHT // 2, BLUE, 'wasd')
+# Класс для бонусов
+class PowerUp:
+    def __init__(self, type):
+        self.type = type  # 'speed', 'life', 'score'
+        self.x = random.randint(30, WIDTH-30)
+        self.y = random.randint(30, HEIGHT-30)
+        self.radius = 8
+        self.spawn_time = time.time()
+        self.lifetime = 15  # секунд
+        
+        if type == 'speed':
+            self.color = YELLOW
+        elif type == 'life':
+            self.color = RED
+        else:  # score
+            self.color = PURPLE
+    
+    def draw(self, surface):
+        # Мигание перед исчезновением
+        time_left = self.lifetime - (time.time() - self.spawn_time)
+        if time_left < 3 and int(time.time() * 5) % 2 == 0:
+            return
+            
+        pygame.draw.circle(surface, self.color, (self.x, self.y), self.radius)
+        # Внутренний круг
+        pygame.draw.circle(surface, WHITE, (self.x, self.y), self.radius // 2)
+    
+    def is_expired(self):
+        return time.time() - self.spawn_time > self.lifetime
+    
+    def check_collision(self, x, y, size):
+        return math.sqrt((self.x - x)**2 + (self.y - y)**2) < self.radius + size
 
-# Еда
+# Создание змеек
+snake1 = Snake(WIDTH // 4, HEIGHT // 2, RED, 'arrows', "Стрелочки")
+snake2 = Snake(3 * WIDTH // 4, HEIGHT // 2, BLUE, 'wasd', "WASD")
+
+# Еда и бонусы
 foods = []
-for _ in range(5):
+powerups = []
+for _ in range(8):
     foods.append((random.randint(20, WIDTH-20), random.randint(20, HEIGHT-20)))
 
-# Счет
-score1 = 0
-score2 = 0
+# Шрифты
 font = pygame.font.Font(None, 36)
+small_font = pygame.font.Font(None, 24)
+big_font = pygame.font.Font(None, 72)
 
 clock = pygame.time.Clock()
-
-# Основной игровой цикл
-running = True
+last_powerup_time = time.time()
 game_over = False
 winner = None
 
+# Основной игровой цикл
+running = True
 while running:
+    current_time = time.time()
+    
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
             if game_over and event.key == pygame.K_SPACE:
                 # Рестарт игры
-                snake1 = Snake(WIDTH // 4, HEIGHT // 2, RED, 'arrows')
-                snake2 = Snake(3 * WIDTH // 4, HEIGHT // 2, BLUE, 'wasd')
-                score1 = 0
-                score2 = 0
+                snake1 = Snake(WIDTH // 4, HEIGHT // 2, RED, 'arrows', "Стрелочки")
+                snake2 = Snake(3 * WIDTH // 4, HEIGHT // 2, BLUE, 'wasd', "WASD")
+                foods = []
+                powerups = []
+                for _ in range(8):
+                    foods.append((random.randint(20, WIDTH-20), random.randint(20, HEIGHT-20)))
                 game_over = False
                 winner = None
+            elif event.key == pygame.K_ESCAPE:
+                running = False
     
     if not game_over:
         # Управление змейкой 1 (стрелочки)
@@ -161,50 +286,122 @@ while running:
         
         # Проверка столкновений
         if snake1.check_collision(snake2):
-            game_over = True
-            winner = "Игрок 2 (WASD)"
-            score2 += 1
+            crash_sound.play()
+            snake1.lives -= 1
+            if snake1.lives <= 0:
+                game_over = True
+                winner = snake2.name
+            else:
+                snake1.respawn()
         
         if snake2.check_collision(snake1):
-            game_over = True
-            winner = "Игрок 1 (Стрелочки)"
-            score1 += 1
+            crash_sound.play()
+            snake2.lives -= 1
+            if snake2.lives <= 0:
+                game_over = True
+                winner = snake1.name
+            else:
+                snake2.respawn()
         
         # Проверка сбора еды
-        for i, (food_x, food_y) in enumerate(foods):
+        for i, (food_x, food_y) in enumerate(foods[:]):
             head1_x, head1_y = snake1.segments[0]
             head2_x, head2_y = snake2.segments[0]
             
-            # Змейка 1 собрала еду
             if math.sqrt((head1_x - food_x)**2 + (head1_y - food_y)**2) < snake1.size + 5:
-                snake1.grow(2)
-                foods[i] = (random.randint(20, WIDTH-20), random.randint(20, HEIGHT-20))
+                eat_sound.play()
+                snake1.grow(1)
+                snake1.score += 1
+                foods.remove((food_x, food_y))
+                foods.append((random.randint(20, WIDTH-20), random.randint(20, HEIGHT-20)))
             
-            # Змейка 2 собрала еду
             if math.sqrt((head2_x - food_x)**2 + (head2_y - food_y)**2) < snake2.size + 5:
-                snake2.grow(2)
-                foods[i] = (random.randint(20, WIDTH-20), random.randint(20, HEIGHT-20))
+                eat_sound.play()
+                snake2.grow(1)
+                snake2.score += 1
+                foods.remove((food_x, food_y))
+                foods.append((random.randint(20, WIDTH-20), random.randint(20, HEIGHT-20)))
+        
+        # Генерация бонусов
+        if current_time - last_powerup_time > 10 and len(powerups) < 2:  # Каждые 10 сек, макс 2 бонуса
+            powerup_type = random.choice(['speed', 'life', 'score'])
+            powerups.append(PowerUp(powerup_type))
+            last_powerup_time = current_time
+        
+        # Проверка сбора бонусов
+        for powerup in powerups[:]:
+            head1_x, head1_y = snake1.segments[0]
+            head2_x, head2_y = snake2.segments[0]
+            
+            if powerup.check_collision(head1_x, head1_y, snake1.size):
+                powerup_sound.play()
+                if powerup.type == 'speed':
+                    snake1.activate_boost()
+                elif powerup.type == 'life':
+                    snake1.lives += 1
+                else:  # score
+                    snake1.score += 5
+                powerups.remove(powerup)
+            
+            elif powerup.check_collision(head2_x, head2_y, snake2.size):
+                powerup_sound.play()
+                if powerup.type == 'speed':
+                    snake2.activate_boost()
+                elif powerup.type == 'life':
+                    snake2.lives += 1
+                else:  # score
+                    snake2.score += 5
+                powerups.remove(powerup)
+            
+            elif powerup.is_expired():
+                powerups.remove(powerup)
     
     # Отрисовка
     screen.fill(BLACK)
+    
+    # Рисуем сетку на фоне
+    for x in range(0, WIDTH, 50):
+        pygame.draw.line(screen, (30, 30, 30), (x, 0), (x, HEIGHT))
+    for y in range(0, HEIGHT, 50):
+        pygame.draw.line(screen, (30, 30, 30), (0, y), (WIDTH, y))
     
     # Рисуем еду
     for food_x, food_y in foods:
         pygame.draw.circle(screen, GREEN, (food_x, food_y), 5)
     
+    # Рисуем бонусы
+    for powerup in powerups:
+        powerup.draw(screen)
+    
     # Рисуем змейки
     snake1.draw(screen)
     snake2.draw(screen)
     
-    # Отображаем счет
-    score_text1 = font.render(f"Стрелочки: {score1}", True, RED)
-    score_text2 = font.render(f"WASD: {score2}", True, BLUE)
+    # Отображаем счет и жизни
+    score_text1 = font.render(f"{snake1.name}: {snake1.score}", True, RED)
+    score_text2 = font.render(f"{snake2.name}: {snake2.score}", True, BLUE)
+    lives_text1 = font.render(f"Жизни: {snake1.lives}", True, RED)
+    lives_text2 = font.render(f"Жизни: {snake2.lives}", True, BLUE)
+    
     screen.blit(score_text1, (20, 20))
-    screen.blit(score_text2, (WIDTH - 150, 20))
+    screen.blit(score_text2, (WIDTH - score_text2.get_width() - 20, 20))
+    screen.blit(lives_text1, (20, 60))
+    screen.blit(lives_text2, (WIDTH - lives_text2.get_width() - 20, 60))
     
     # Инструкции
-    instructions = font.render("Игрок 1: Стрелочки | Игрок 2: WASD", True, WHITE)
-    screen.blit(instructions, (WIDTH // 2 - 180, HEIGHT - 40))
+    instructions = small_font.render("Игрок 1: Стрелочки | Игрок 2: WASD | ПРОБЕЛ - рестарт | ESC - выход", True, WHITE)
+    screen.blit(instructions, (WIDTH // 2 - instructions.get_width() // 2, HEIGHT - 30))
+    
+    # Легенда бонусов
+    legend_y = HEIGHT - 100
+    pygame.draw.circle(screen, YELLOW, (20, legend_y), 8)
+    screen.blit(small_font.render(" - ускорение", True, WHITE), (40, legend_y - 8))
+    
+    pygame.draw.circle(screen, RED, (20, legend_y + 25), 8)
+    screen.blit(small_font.render(" +1 жизнь", True, WHITE), (40, legend_y + 17))
+    
+    pygame.draw.circle(screen, PURPLE, (20, legend_y + 50), 8)
+    screen.blit(small_font.render(" +5 очков", True, WHITE), (40, legend_y + 42))
     
     # Сообщение о победе
     if game_over:
@@ -212,14 +409,16 @@ while running:
         overlay.fill((0, 0, 0, 180))
         screen.blit(overlay, (0, 0))
         
-        winner_text = font.render(f"Победил: {winner}!", True, WHITE)
+        winner_text = big_font.render(f"ПОБЕДИЛ: {winner}!", True, YELLOW)
+        score_text = font.render(f"Счет: {snake1.score if winner == snake1.name else snake2.score}", True, WHITE)
         restart_text = font.render("Нажмите ПРОБЕЛ для новой игры", True, WHITE)
         
-        screen.blit(winner_text, (WIDTH // 2 - winner_text.get_width() // 2, HEIGHT // 2 - 30))
-        screen.blit(restart_text, (WIDTH // 2 - restart_text.get_width() // 2, HEIGHT // 2 + 30))
+        screen.blit(winner_text, (WIDTH // 2 - winner_text.get_width() // 2, HEIGHT // 2 - 50))
+        screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, HEIGHT // 2 + 10))
+        screen.blit(restart_text, (WIDTH // 2 - restart_text.get_width() // 2, HEIGHT // 2 + 70))
     
     pygame.display.flip()
-    clock.tick(30)
+    clock.tick(60)
 
 pygame.quit()
 sys.exit()
