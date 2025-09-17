@@ -1,106 +1,225 @@
 import pygame
 import sys
+import random
+import math
 
 # Инициализация Pygame
 pygame.init()
 
-# Размер окна
+# Настройки экрана
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Retro Pong")
+pygame.display.set_caption("Двухместная змейка - Стрелочки vs WASD")
 
 # Цвета
-WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (255, 50, 50)
+BLUE = (50, 50, 255)
+GREEN = (50, 200, 50)
+PURPLE = (200, 50, 200)
 
-# Игровые объекты
-ball = pygame.Rect(WIDTH // 2 - 15, HEIGHT // 2 - 15, 30, 30)
-player = pygame.Rect(WIDTH - 20, HEIGHT // 2 - 70, 10, 140)
-opponent = pygame.Rect(10, HEIGHT // 2 - 70, 10, 140)
+# Класс для змейки
+class Snake:
+    def __init__(self, x, y, color, control_scheme):
+        self.segments = [(x, y)]
+        self.direction = (1, 0)  # начальное направление
+        self.color = color
+        self.growth_pending = 3  # начальная длина
+        self.control_scheme = control_scheme  # 'arrows' или 'wasd'
+        self.speed = 4
+        self.size = 10
+        
+    def change_direction(self, new_direction):
+        # Предотвращаем разворот на 180 градусов
+        if (self.direction[0] + new_direction[0] != 0 or 
+            self.direction[1] + new_direction[1] != 0):
+            self.direction = new_direction
+    
+    def move(self):
+        head_x, head_y = self.segments[0]
+        dx, dy = self.direction
+        new_head = (head_x + dx * self.speed, head_y + dy * self.speed)
+        
+        # Проверка границ экрана (телепортация на противоположную сторону)
+        new_head = (new_head[0] % WIDTH, new_head[1] % HEIGHT)
+        
+        self.segments.insert(0, new_head)
+        
+        if self.growth_pending > 0:
+            self.growth_pending -= 1
+        else:
+            self.segments.pop()
+    
+    def draw(self, surface):
+        for i, (x, y) in enumerate(self.segments):
+            # Градиент цвета от головы к хвосту
+            color_factor = 1.0 - (i / len(self.segments)) * 0.7
+            segment_color = (
+                min(255, int(self.color[0] * color_factor)),
+                min(255, int(self.color[1] * color_factor)),
+                min(255, int(self.color[2] * color_factor))
+            )
+            
+            pygame.draw.circle(surface, segment_color, (int(x), int(y)), self.size)
+            
+            # Рисуем глаза у головы
+            if i == 0:
+                eye_offset = 3
+                # Определяем позиции глаз в зависимости от направления
+                if self.direction == (1, 0):  # вправо
+                    left_eye = (x + self.size//2, y - eye_offset)
+                    right_eye = (x + self.size//2, y + eye_offset)
+                elif self.direction == (-1, 0):  # влево
+                    left_eye = (x - self.size//2, y - eye_offset)
+                    right_eye = (x - self.size//2, y + eye_offset)
+                elif self.direction == (0, -1):  # вверх
+                    left_eye = (x - eye_offset, y - self.size//2)
+                    right_eye = (x + eye_offset, y - self.size//2)
+                else:  # вниз
+                    left_eye = (x - eye_offset, y + self.size//2)
+                    right_eye = (x + eye_offset, y + self.size//2)
+                
+                pygame.draw.circle(surface, WHITE, left_eye, 2)
+                pygame.draw.circle(surface, WHITE, right_eye, 2)
+    
+    def check_collision(self, other_snake):
+        head_x, head_y = self.segments[0]
+        
+        # Проверка столкновения с другой змейкой
+        for segment in other_snake.segments:
+            seg_x, seg_y = segment
+            distance = math.sqrt((head_x - seg_x)**2 + (head_y - seg_y)**2)
+            if distance < self.size + other_snake.size:
+                return True
+        
+        return False
+    
+    def grow(self, amount=1):
+        self.growth_pending += amount
 
-# Скорость
-ball_speed_x = 7
-ball_speed_y = 7
-player_speed = 0
-opponent_speed = 6
+# Создание змеек
+snake1 = Snake(WIDTH // 4, HEIGHT // 2, RED, 'arrows')
+snake2 = Snake(3 * WIDTH // 4, HEIGHT // 2, BLUE, 'wasd')
 
-# Счёт
-player_score = 0
-opponent_score = 0
-font = pygame.font.Font(None, 74)
+# Еда
+foods = []
+for _ in range(5):
+    foods.append((random.randint(20, WIDTH-20), random.randint(20, HEIGHT-20)))
+
+# Счет
+score1 = 0
+score2 = 0
+font = pygame.font.Font(None, 36)
 
 clock = pygame.time.Clock()
 
-def ball_restart():
-    global ball_speed_x, ball_speed_y
-    ball.center = (WIDTH // 2, HEIGHT // 2)
-    ball_speed_x *= -1
-    ball_speed_y *= -1
+# Основной игровой цикл
+running = True
+game_over = False
+winner = None
 
-# Основной цикл
-while True:
+while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-
-        # Управление игроком
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
-                player_speed = -8
-            if event.key == pygame.K_DOWN:
-                player_speed = 8
-        if event.type == pygame.KEYUP:
-            if event.key in (pygame.K_UP, pygame.K_DOWN):
-                player_speed = 0
-
-    # Движение
-    ball.x += ball_speed_x
-    ball.y += ball_speed_y
-    player.y += player_speed
-
-    # Управление противником (AI)
-    if opponent.centery < ball.centery:
-        opponent.y += opponent_speed
-    if opponent.centery > ball.centery:
-        opponent.y -= opponent_speed
-
-    # Ограничения по экрану
-    if player.top < 0:
-        player.top = 0
-    if player.bottom > HEIGHT:
-        player.bottom = HEIGHT
-    if opponent.top < 0:
-        opponent.top = 0
-    if opponent.bottom > HEIGHT:
-        opponent.bottom = HEIGHT
-
-    # Отскок мяча
-    if ball.top <= 0 or ball.bottom >= HEIGHT:
-        ball_speed_y *= -1
-    if ball.colliderect(player) or ball.colliderect(opponent):
-        ball_speed_x *= -1
-
-    # Счёт
-    if ball.left <= 0:
-        player_score += 1
-        ball_restart()
-    if ball.right >= WIDTH:
-        opponent_score += 1
-        ball_restart()
-
-    # Рендер
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if game_over and event.key == pygame.K_SPACE:
+                # Рестарт игры
+                snake1 = Snake(WIDTH // 4, HEIGHT // 2, RED, 'arrows')
+                snake2 = Snake(3 * WIDTH // 4, HEIGHT // 2, BLUE, 'wasd')
+                score1 = 0
+                score2 = 0
+                game_over = False
+                winner = None
+    
+    if not game_over:
+        # Управление змейкой 1 (стрелочки)
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            snake1.change_direction((-1, 0))
+        if keys[pygame.K_RIGHT]:
+            snake1.change_direction((1, 0))
+        if keys[pygame.K_UP]:
+            snake1.change_direction((0, -1))
+        if keys[pygame.K_DOWN]:
+            snake1.change_direction((0, 1))
+        
+        # Управление змейкой 2 (WASD)
+        if keys[pygame.K_a]:
+            snake2.change_direction((-1, 0))
+        if keys[pygame.K_d]:
+            snake2.change_direction((1, 0))
+        if keys[pygame.K_w]:
+            snake2.change_direction((0, -1))
+        if keys[pygame.K_s]:
+            snake2.change_direction((0, 1))
+        
+        # Движение змеек
+        snake1.move()
+        snake2.move()
+        
+        # Проверка столкновений
+        if snake1.check_collision(snake2):
+            game_over = True
+            winner = "Игрок 2 (WASD)"
+            score2 += 1
+        
+        if snake2.check_collision(snake1):
+            game_over = True
+            winner = "Игрок 1 (Стрелочки)"
+            score1 += 1
+        
+        # Проверка сбора еды
+        for i, (food_x, food_y) in enumerate(foods):
+            head1_x, head1_y = snake1.segments[0]
+            head2_x, head2_y = snake2.segments[0]
+            
+            # Змейка 1 собрала еду
+            if math.sqrt((head1_x - food_x)**2 + (head1_y - food_y)**2) < snake1.size + 5:
+                snake1.grow(2)
+                foods[i] = (random.randint(20, WIDTH-20), random.randint(20, HEIGHT-20))
+            
+            # Змейка 2 собрала еду
+            if math.sqrt((head2_x - food_x)**2 + (head2_y - food_y)**2) < snake2.size + 5:
+                snake2.grow(2)
+                foods[i] = (random.randint(20, WIDTH-20), random.randint(20, HEIGHT-20))
+    
+    # Отрисовка
     screen.fill(BLACK)
-    pygame.draw.rect(screen, WHITE, player)
-    pygame.draw.rect(screen, WHITE, opponent)
-    pygame.draw.ellipse(screen, WHITE, ball)
-    pygame.draw.aaline(screen, WHITE, (WIDTH // 2, 0), (WIDTH // 2, HEIGHT))
-
-    # Отображение счёта
-    player_text = font.render(str(player_score), True, WHITE)
-    opponent_text = font.render(str(opponent_score), True, WHITE)
-    screen.blit(player_text, (WIDTH // 2 + 20, 20))
-    screen.blit(opponent_text, (WIDTH // 2 - 60, 20))
-
+    
+    # Рисуем еду
+    for food_x, food_y in foods:
+        pygame.draw.circle(screen, GREEN, (food_x, food_y), 5)
+    
+    # Рисуем змейки
+    snake1.draw(screen)
+    snake2.draw(screen)
+    
+    # Отображаем счет
+    score_text1 = font.render(f"Стрелочки: {score1}", True, RED)
+    score_text2 = font.render(f"WASD: {score2}", True, BLUE)
+    screen.blit(score_text1, (20, 20))
+    screen.blit(score_text2, (WIDTH - 150, 20))
+    
+    # Инструкции
+    instructions = font.render("Игрок 1: Стрелочки | Игрок 2: WASD", True, WHITE)
+    screen.blit(instructions, (WIDTH // 2 - 180, HEIGHT - 40))
+    
+    # Сообщение о победе
+    if game_over:
+        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 180))
+        screen.blit(overlay, (0, 0))
+        
+        winner_text = font.render(f"Победил: {winner}!", True, WHITE)
+        restart_text = font.render("Нажмите ПРОБЕЛ для новой игры", True, WHITE)
+        
+        screen.blit(winner_text, (WIDTH // 2 - winner_text.get_width() // 2, HEIGHT // 2 - 30))
+        screen.blit(restart_text, (WIDTH // 2 - restart_text.get_width() // 2, HEIGHT // 2 + 30))
+    
     pygame.display.flip()
-    clock.tick(60)
+    clock.tick(30)
+
+pygame.quit()
+sys.exit()
