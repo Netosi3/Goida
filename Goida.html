@@ -1,75 +1,106 @@
+[file name]: 1000006575.jpg
+[file content begin]
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Документ HTML5</title>
-</head>
+    <title>Элемент details в HTML5</title>
+<head>
 <body>
-    <div>Заголовок документа HTML5</div>
-    <div>
-        <p><span style="color:red;">Первый</span> параграф</p>
-        <p><span>Второй</span> параграф</p>
-    </div>
-
-    <h1>Заголовок первого уровня</h1>
-    <h2>Заголовок второго уровня</h2>
-    <h3>Заголовок третьего уровня</h3>
-    <h4>Заголовок четвертого уровня</h4>
-    <h5>Заголовок пятого уровня</h5>
-    <h6>Заголовок шестого уровня</h6>
-
-    <p>Форматирование в <mark>HTML5</mark></p>
-    <p>Это <b>выделенный</b> текст</p>
-    <p>Это <strong>важный</strong> текст</p>
-    <p>Это <del>зачеркнутый</del> текст</p>
-    <p>Это <s>недействительный</s> текст</p>
-    <p>Это <em>важный</em> текст</p>
-    <p>Это текст <i>курсивом</i> </p>
-    <p>Это <ins>добавленный</ins> текст</p>
-    <p>Это <u>подчеркнутый</u> текст</p>
-    <p>X<sub>i</sub> = Y<sup><small>2</small></sup> + Z<sup><small>2</small></sup></p>
-
-    <h2>list-style-type = decimal</h2>
-    <ol style="list-style-type:decimal;" start="3">
-        <li>iPhone 6S</li>
-        <li>Galaxy S7</li>
-        <li>Nexus 5X</li>
-        <li>Lumia 950</li>
-    </ol>
-
-    <h2>list-style-type = upper-roman</h2>
-    <ol style="list-style-type:upper-roman;" >
-        <li>iPhone 6S Plus</li>
-        <li>Galaxy S7 Edge</li>
-        <li>Nexus 6P</li>
-        <li>Lumia 950 XL</li>
-    </ol>
-
-    <h2>list-style-type = lower-alpha</h2>
-    <ol style="list-style-type:lower-alpha;" >
-        <li>LG G S</li>
-        <li>Huawei P8</li>
-        <li>Asus ZenFone 2</li>
-    </ol>
-
-    <ul style="list-style-image:url(phone_touch.png);">
-        <li>iPhone 6S</li>
-        <li>Galaxy S7</li>
-        <li>Nexus 5X</li>
-        <li>Lumia 950</li>
+    <details>
+    <summary>Флагманы 2015</summary>
+    <ul>
+    <li>iPhone 6S Plus</li>
+    <li>Nexus 6P</li>
+    <li>Galaxy S6 Edge</li>
+    <li>Lumia 950 XL</li>
     </ul>
-
-    <style>
-    ul#menu li {
-    display:inline;
-    }
-    </style>
-
-    <ul id="menu">
-        <li>Главная</li>
-        <li>Блог</li>
-        <li>Форум</li>
-        <li>О сайте</li>
-    </ul>
+    </details>
 </body>
 </html>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Списки в HTML5</title>
+<head>
+<body>
+    <dl>
+    <dr>Онтология</dr>
+    <dd>Раздел философии, изучающий фундаментальные принципы бытия</dd>
+    <dr>Гносеология</dr>
+    <dd>Философская дисциплина, занимающаяся исследованиями, критикой и теориями познания</dd>
+    <dr>Производственные отношения</dr>
+    <dd>Совокупность отношений между людьми, складывающихся в процессе общественного производства,
+    обмена, распределения материальных благ и услуг.</dd>
+    </dl>
+    </body>
+</html>
+Фреймы
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Фреймы в HTML5</title>
+<head>
+<body>
+    <h2>Элемент iframe</h2>
+    <iframe src="http://wikipedia.com" width="400" height="200">
+    </iframe>
+</body>
+</html>
+[file content end]
+
+[file name]: 1000006576.jpg
+[file content begin]
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Элемент Figure в HTML5</title>
+</head>
+<body>
+<div>
+    <p>Lorem ipsum dolor ... </p>
+    <figure>
+    <figeaption>Февраль 2013</figeaption>
+    <img src="dubi.png" alt="Зимний пейзаж">
+    </figure>
+    <p>Lorem ipsum dolor ... </p>
+    </div>
+</body>
+</html>
+
+Ссылки
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Ссылки</title>
+</head>
+<body>
+    <a href="content.html">Учебник по HTML5</a>
+</body>
+</html>
+
+Внутренние ссылки
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Внутренние ссылки</title>
+</head>
+<body>
+    <a href="#paragraph1">Параграф 1</a> | <a href="#paragraph2">Параграф 2</a> | <a href="#paragraph3">Параграф 3</a>
+    <h2 id="paragraph1">Параграф 1</h2>
+    <p>Содержание параграфа 1</p>
+    <h2 id="paragraph2">Параграф 2</h2>
+    <p>Содержание параграфа 2</p>
+    <h2 id="paragraph3">Параграф 3</h2>
+    <p>Содержание параграфа 3</p>
+</body>
+</html>
+[file content end]
