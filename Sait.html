@@ -3,65 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мой простой сайт</title>
+    <title>Интернет-магазин техники</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
             padding: 0;
-            background-color: #f0f0f0;
+            box-sizing: border-box;
         }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            background-color: #f4f4f4;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
         header {
-            background-color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 20px;
-            text-align: center;
+            padding: 1rem 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        nav {
-            background-color: #444;
-            padding: 10px;
-            text-align: center;
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        nav a {
+        
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 2rem;
+        }
+        
+        nav ul li a {
             color: white;
             text-decoration: none;
-            margin: 0 15px;
+            transition: color 0.3s;
         }
-        main {
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
+        
+        nav ul li a:hover {
+            color: #ffd700;
         }
+        
+        .hero {
+            background: url('https://via.placeholder.com/1200x400') no-repeat center center/cover;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+        }
+        
+        .hero-content h2 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .btn {
+            display: inline-block;
+            background: #ff6b6b;
+            color: white;
+            padding: 0.8rem 2rem;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #ff5252;
+        }
+        
+        .products {
+            padding: 4rem 0;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+            font-size: 2.5rem;
+            color: #333;
+        }
+        
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .product-card img {
+            max-width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        
+        .price {
+            font-size: 1.5rem;
+            color: #667eea;
+            font-weight: bold;
+            margin: 1rem 0;
+        }
+        
         footer {
-            background-color: #333;
+            background: #333;
             color: white;
             text-align: center;
-            padding: 10px;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
+            padding: 2rem 0;
+            margin-top: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            nav ul {
+                margin-top: 1rem;
+                flex-direction: column;
+            }
+            
+            nav ul li {
+                margin: 0.5rem 0;
+            }
+            
+            .hero-content h2 {
+                font-size: 2rem;
+            }
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>Добро пожаловать на мой сайт</h1>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">TechStore</div>
+                <nav>
+                    <ul>
+                        <li><a href="#">Главная</a></li>
+                        <li><a href="#">Каталог</a></li>
+                        <li><a href="#">О нас</a></li>
+                        <li><a href="#">Контакты</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
     </header>
-    
-    <nav>
-        <a href="#">Главная</a>
-        <a href="#">О нас</a>
-        <a href="#">Контакты</a>
-    </nav>
-    
-    <main>
-        <h2>Приветствую!</h2>
-        <p>Это простой пример сайта с базовой структурой.</p>
-        <p>Здесь может быть ваш контент.</p>
-    </main>
-    
+
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Новейшие технологии для вас</h2>
+            <a href="#" class="btn">Смотреть каталог</a>
+        </div>
+    </section>
+
+    <section class="products">
+        <div class="container">
+            <h2 class="section-title">Популярные товары</h2>
+            <div class="product-grid">
+                <div class="product-card">
+                    <img src="https://via.placeholder.com/250x200" alt="Смартфон">
+                    <h3>Смартфон Premium</h3>
+                    <p>Мощный смартфон с лучшей камерой</p>
+                    <div class="price">35 990 ₽</div>
+                    <a href="#" class="btn">Купить</a>
+                </div>
+                
+                <div class="product-card">
+                    <img src="https://via.placeholder.com/250x200" alt="Ноутбук">
+                    <h3>Игровой ноутбук</h3>
+                    <p>Высокая производительность для игр</p>
+                    <div class="price">89 990 ₽</div>
+                    <a href="#" class="btn">Купить</a>
+                </div>
+                
+                <div class="product-card">
+                    <img src="https://via.placeholder.com/250x200" alt="Наушники">
+                    <h3>Беспроводные наушники</h3>
+                    <p>Качественный звук без проводов</p>
+                    <div class="price">12 990 ₽</div>
+                    <a href="#" class="btn">Купить</a>
+                </div>
+                
+                <div class="product-card">
+                    <img src="https://via.placeholder.com/250x200" alt="Планшет">
+                    <h3>Планшет Pro</h3>
+                    <p>Идеален для работы и творчества</p>
+                    <div class="price">45 990 ₽</div>
+                    <a href="#" class="btn">Купить</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <footer>
-        <p>© 2024 Мой простой сайт</p>
+        <div class="container">
+            <p>&copy; 2024 TechStore. Все права защищены.</p>
+            <p>Телефон: +7 (999) 123-45-67 | Email: info@techstore.ru</p>
+        </div>
     </footer>
 </body>
 </html>
